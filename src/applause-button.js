@@ -1,33 +1,33 @@
 import "document-register-element/build/document-register-element";
 
 const VERSION = "3.3.0";
-const API = "https://api.applause-button.com";
 
-const getClaps = (api, url) =>
-  // TODO: polyfill for IE (not edge)
-  fetch(`${api}/get-claps` + (url ? `?url=${url}` : ""), {
-    headers: {
-      "Content-Type": "text/plain"
-    }
-  })
-    .then(response => response.text())
-    .then(res => Number(res));
+// const API = "https://api.applause-button.com";
 
-const updateClaps = (api, claps, url) =>
-  // TODO: polyfill for IE (not edge)
-  fetch(`${api}/update-claps` + (url ? `?url=${url}` : ""), {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain"
-    },
-    body: JSON.stringify(`${claps},${VERSION}`)
-  })
-    .then(response => response.text())
-    .then(res => Number(res));
+// const getClaps = (api, url) =>
+//   // TODO: polyfill for IE (not edge)
+//   fetch(`${api}/get-claps` + (url ? `?url=${url}` : ""), {
+//     headers: {
+//       "Content-Type": "text/plain"
+//     }
+//   })
+//     .then(response => response.text())
+//     .then(res => Number(res));
+
+// const updateClaps = (api, claps, url) =>
+//   // TODO: polyfill for IE (not edge)
+//   fetch(`${api}/update-claps` + (url ? `?url=${url}` : ""), {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "text/plain"
+//     },
+//     body: JSON.stringify(`${claps},${VERSION}`)
+//   })
+//     .then(response => response.text())
+//     .then(res => Number(res));
 
 const arrayOfSize = size => new Array(size).fill(undefined);
-
-const formatClaps = claps => claps.toLocaleString("en");
+const formatClaps = claps => claps.toLocaleString(store('lng'));
 
 // toggle a CSS class to re-trigger animations
 const toggleClass = (element, cls) => {
@@ -57,7 +57,7 @@ class HTMLCustomElement extends HTMLElement {
   init() {}
 }
 
-const MAX_MULTI_CLAP = 10;
+const MAX_MULTI_CLAP = 100;
 
 class ApplauseButton extends HTMLCustomElement {
   connectedCallback() {
@@ -115,28 +115,28 @@ class ApplauseButton extends HTMLCustomElement {
 
     // buffer claps within a 2 second window
     this._bufferedClaps = 0;
-    this._updateClaps = debounce(() => {
-      if (this._totalClaps < MAX_MULTI_CLAP) {
-        const increment = Math.min(
-          this._bufferedClaps,
-          MAX_MULTI_CLAP - this._totalClaps
-        );
-        // send the updated clap count - checking the response to see if the server-held
-        // clap count has actually incremented
-        updateClaps(this.api, increment, this.url).then(updatedClapCount => {
-          if (updatedClapCount === this._cachedClapCount) {
-            // if the clap number as not incremented, disable further updates
-            this.classList.add("clap-limit-exceeded");
-            // and reset the counter
-            this._countElement.innerHTML = formatClaps(updatedClapCount);
-          }
-          this._cachedClapCount = updatedClapCount;
+    // this._updateClaps = debounce(() => {
+    //   if (this._totalClaps < MAX_MULTI_CLAP) {
+    //     const increment = Math.min(
+    //       this._bufferedClaps,
+    //       MAX_MULTI_CLAP - this._totalClaps
+    //     );
+    //     // send the updated clap count - checking the response to see if the server-held
+    //     // clap count has actually incremented
+    //     updateClaps(this.api, increment, this.url).then(updatedClapCount => {
+    //       if (updatedClapCount === this._cachedClapCount) {
+    //         // if the clap number as not incremented, disable further updates
+    //         this.classList.add("clap-limit-exceeded");
+    //         // and reset the counter
+    //         this._countElement.innerHTML = formatClaps(updatedClapCount);
+    //       }
+    //       this._cachedClapCount = updatedClapCount;
 
-          this._totalClaps += increment;
-          this._bufferedClaps = 0;
-        });
-      }
-    }, 2000);
+    //       this._totalClaps += increment;
+    //       this._bufferedClaps = 0;
+    //     });
+    //   }
+    // }, 2000);
 
     this.addEventListener("mousedown", event => {
       if (event.button !== 0) {
@@ -165,7 +165,7 @@ class ApplauseButton extends HTMLCustomElement {
 
       // buffer the increased count and defer the update
       this._bufferedClaps++;
-      this._updateClaps();
+      // this._updateClaps();
 
       // increment the clap count after a small pause (to allow the animation to run)
       setTimeout(() => {
@@ -182,14 +182,14 @@ class ApplauseButton extends HTMLCustomElement {
       }
     });
 
-    getClaps(this.api, this.url).then(clapCount => {
-      this.classList.remove("loading");
-      this._cachedClapCount = clapCount;
-      initialClapCountResolve(clapCount);
-      if (clapCount > 0) {
-        this._countElement.innerHTML = formatClaps(clapCount);
-      }
-    });
+    // getClaps(this.api, this.url).then(clapCount => {
+    //   this.classList.remove("loading");
+    //   this._cachedClapCount = clapCount;
+    //   initialClapCountResolve(clapCount);
+    //   if (clapCount > 0) {
+    //     this._countElement.innerHTML = formatClaps(clapCount);
+    //   }
+    // });
 
     this._connected = true;
   }
